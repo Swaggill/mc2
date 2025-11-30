@@ -1,0 +1,294 @@
+// Full project files below. Each file is prefixed with a header comment of the form: /* === FILE: path === */
+
+/* === FILE: package.json === */
+{
+  "name": "liste-status-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
+
+/* === FILE: index.html === */
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liste & status</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+/* === FILE: src/main.jsx === */
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App'
+import './styles.css'
+
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+
+/* === FILE: src/styles.css === */
+:root{ --bg:#0f172a; --card:#111827; --accent:#7c3aed; --text:#e6eef8 }
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial;background:linear-gradient(180deg,var(--bg),#071029);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.app{width:100%;max-width:980px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:12px}
+.item{padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:8px}
+.controls{display:flex;gap:8px}
+.input{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);flex:1}
+.btn{padding:8px 10px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer}
+.small{font-size:13px;opacity:0.9}
+.status-badge{font-weight:700;padding:6px;border-radius:8px;align-self:flex-start}
+.status-online{background:rgba(16,185,129,0.12);color:#10b981}
+.status-offline{background:rgba(248,113,113,0.12);color:#f87171}
+.status-busy{background:rgba(250,204,21,0.08);color:#f59e0b}
+
+/* === FILE: src/App.jsx === */
+import React, { useEffect, useState } from 'react'
+
+const API = {
+  list: '/api/items',
+}
+
+function StatusBadge({ status }){
+  const cls = status === 'online' ? 'status-badge status-online' : status === 'busy' ? 'status-badge status-busy' : 'status-badge status-offline'
+  return <div className={cls}>{status}</div>
+}
+
+export default function App(){
+  const [items, setItems] = useState([])
+  const [label, setLabel] = useState('')
+  const [status, setStatus] = useState('online')
+  const [loading, setLoading] = useState(false)
+
+  async function fetchList(){
+    setLoading(true)
+    try{
+      const res = await fetch(API.list)
+      const json = await res.json()
+      setItems(json)
+    }catch(e){
+      console.error(e)
+    }finally{setLoading(false)}
+  }
+
+  useEffect(()=>{fetchList()},[])
+
+  async function addItem(){
+    if(!label) return
+    const payload = { label, status }
+    const res = await fetch(API.list, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+    if(res.ok){ setLabel(''); fetchList() }
+  }
+
+  async function removeItem(id){
+    const res = await fetch(`${API.list}/${id}`, { method: 'DELETE' })
+    if(res.ok) fetchList()
+  }
+
+  async function changeStatus(id, newStatus){
+    // update using PATCH
+    const res = await fetch(`${API.list}/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) })
+    if(res.ok) fetchList()
+  }
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div>
+          <h1 style={{margin:0}}>Liste & status</h1>
+          <div className="small">Ajouter/enlever des entrées — chaque entrée a un statut affiché dans un carré</div>
+        </div>
+        <div className="card" style={{display:'flex',gap:8,alignItems:'center'}}>
+          <input className="input" placeholder="Nom de l'élément" value={label} onChange={e=>setLabel(e.target.value)} />
+          <select value={status} onChange={e=>setStatus(e.target.value)} className="input" style={{maxWidth:140}}>
+            <option value="online">online</option>
+            <option value="busy">busy</option>
+            <option value="offline">offline</option>
+          </select>
+          <button className="btn" onClick={addItem}>Ajouter</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <strong>Liste</strong>
+          <div className="small">{loading ? 'Chargement...' : `${items.length} élément(s)`}</div>
+        </div>
+
+        <div className="list">
+          {items.map(it=> (
+            <div key={it.id} className="item card" style={{borderLeft:`4px solid rgba(255,255,255,0.03)`}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:700}}>{it.label}</div>
+                  <div className="small">ID: {it.id}</div>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:8,alignItems:'flex-end'}}>
+                  <StatusBadge status={it.status} />
+                  <div style={{display:'flex',gap:6}}>
+                    <button className="btn small" onClick={()=>changeStatus(it.id, it.status === 'online' ? 'offline' : 'online')}>Toggle</button>
+                    <button className="btn small" onClick={()=>removeItem(it.id)}>Supprimer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+
+    </div>
+  )
+}
+
+/* === FILE: server.js === */
+// Minimal Express API to store items in-memory. For production replace with DB.
+const express = require('express')
+const cors = require('cors')
+const path = require('path')
+const app = express()
+app.use(cors())
+app.use(express.json())
+
+let nextId = 1
+let items = [ { id: nextId++, label: 'Serveur 1', status: 'online' }, { id: nextId++, label: 'Serveur 2', status: 'offline' } ]
+
+app.get('/api/items', (req, res)=>{
+  res.json(items)
+})
+
+app.post('/api/items', (req, res)=>{
+  const { label, status } = req.body
+  if(!label) return res.status(400).json({ error: 'label required' })
+  const it = { id: nextId++, label, status: status || 'offline' }
+  items.push(it)
+  res.status(201).json(it)
+})
+
+app.delete('/api/items/:id',(req,res)=>{
+  const id = Number(req.params.id)
+  const old = items.length
+  items = items.filter(i=>i.id !== id)
+  if(items.length === old) return res.status(404).json({error:'not found'})
+  res.status(204).end()
+})
+
+app.patch('/api/items/:id',(req,res)=>{
+  const id = Number(req.params.id)
+  const it = items.find(i=>i.id===id)
+  if(!it) return res.status(404).json({error:'not found'})
+  const { status, label } = req.body
+  if(status) it.status = status
+  if(label) it.label = label
+  res.json(it)
+})
+
+// Serve frontend built files if any
+app.use(express.static(path.join(__dirname, 'dist')))
+
+const port = process.env.PORT || 3000
+app.listen(port, ()=>console.log('Server running on', port))
+
+/* === FILE: craftos/monitor.lua === */
+-- CraftOS (ComputerCraft/Tweaked) script to display list from the API on an advanced monitor
+-- Usage: place this file on the computer and run `lua monitor.lua http://<server-ip>:3000/api/items`
+
+local args = { ... }
+if #args < 1 then
+  print('Usage: monitor.lua <api-url>')
+  return
+end
+
+local url = args[1]
+local monitor = peripheral.find('monitor')
+if not monitor then
+  print('Advanced monitor not found. Attach one and try again.')
+  return
+end
+
+monitor.setTextScale(0.5)
+local http = http
+if not http then
+  print('HTTP API must be enabled in the server (minecraft).')
+  return
+end
+
+local function fetch()
+  local ok, res = pcall(function() return http.get(url) end)
+  if not ok or not res then return nil, 'fetch failed' end
+  local body = res.readAll()
+  res.close()
+  local data = textutils.unserializeJSON and textutils.unserializeJSON(body) or textutils.unserialize(body)
+  return data
+end
+
+local function draw(list)
+  monitor.clear()
+  local w, h = monitor.getSize()
+  local y = 1
+  monitor.setCursorPos(1,y)
+  monitor.write('Liste (rafraichi every 5s)')
+  y = y + 2
+  for i, item in ipairs(list) do
+    if y > h then break end
+    -- Build one-line: "Label — ... status"
+    local line = string.format('%d) %s — %s', item.id, item.label, item.status)
+    -- If too long, cut
+    if #line > w then line = string.sub(line,1,w) end
+    monitor.setCursorPos(1,y)
+    monitor.write(line)
+    y = y + 1
+  end
+end
+
+while true do
+  local list, err = fetch()
+  if list then
+    draw(list)
+  else
+    monitor.clear()
+    monitor.setCursorPos(1,1)
+    monitor.write('Erreur: '..tostring(err))
+  end
+  sleep(5)
+end
+
+/* === FILE: README.md === */
+# Liste & status
+
+Projet minimal – frontend React + backend Express (in-memory) + script CraftOS pour afficher la liste sur un Advanced Monitor (ComputerCraft / CC: Tweaked).
+
+Quickstart:
+1. `npm install`
+2. `npm run server`  (start api on :3000)
+3. `npm run start`   (start vite dev server)
+
+CraftOS usage example (sur l'ordinateur Minecraft):
+`monitor.lua http://192.168.0.10:3000/api/items`
+
+
+/* End of files */

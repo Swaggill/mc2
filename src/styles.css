@@ -1,0 +1,16 @@
+:root{ --bg:#0f172a; --card:#111827; --accent:#7c3aed; --text:#e6eef8 }
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial;background:linear-gradient(180deg,var(--bg),#071029);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.app{width:100%;max-width:980px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+.list{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.item{padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:8px}
+.controls{display:flex;gap:8px}
+.input{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);flex:1}
+.btn{padding:8px 10px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer}
+.small{font-size:13px;opacity:0.9}
+.status-badge{font-weight:700;padding:6px;border-radius:8px;align-self:flex-start}
+.status-urgent{background:rgba(248,113,113,0.12);color:#f87171}
+.status-moyen{background:rgba(250,204,21,0.08);color:#f59e0b}
+.status-tranquille{background:rgba(16,185,129,0.12);color:#10b981}
