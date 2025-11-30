@@ -2,7 +2,7 @@
 -- Usage: place this file on the computer and run `lua monitor.lua http://<server-ip>:3000/api/items`
 
 local args = { ... }
-local url = args[1] or 'https://692c86e7556ae7f45d645cea--glowing-raindrop-939710.netlify.app/.netlify/functions/items'
+local url = args[1] or 'https://mc2-okg3.onrender.com/api/items'
 local monitor = peripheral.find('monitor')
 if not monitor then
   print('Advanced monitor not found. Attach one and try again.')
