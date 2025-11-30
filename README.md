@@ -2,8 +2,7 @@ Projet minimal – frontend React + backend Express (in-memory) + script CraftOS
 
 Quickstart:
 1. `npm install`
-2. `npm run server`  (start api on :3000)
-3. `npm run start`   (start vite dev server)
+2. `npm run start`   (build and start server on :3000)
 
 CraftOS usage example (sur l'ordinateur Minecraft):
 `monitor.lua http://192.168.0.10:3000/api/items`
